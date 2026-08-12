@@ -37,6 +37,7 @@ internal static class ChupManHinh
         Chup(thuMuc, "04_GiaoVien", () => new frmGiaoVien());
         Chup(thuMuc, "05_BoDe", () => new frmBoDe());
         Chup(thuMuc, "06_ChuanBiThi", () => new frmChuanBiThi());
+        Chup(thuMuc, "06b_XemKetQua", () => new frmXemKetQua());
         Chup(thuMuc, "07_BangDiem", () => new frmBangDiem());
         Chup(thuMuc, "08_BaoCaoDangKy", () => new frmBaoCaoDangKy());
         Chup(thuMuc, "09_TraCuu", () => new frmTraCuu());

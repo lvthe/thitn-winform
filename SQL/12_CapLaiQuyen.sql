@@ -64,6 +64,18 @@ INSERT INTO @map (sp, nhom) VALUES
     /*--- Câu 9, 10, 11: ba báo cáo. Đề: Trưởng chạy được TẤT CẢ ---*/
     ('sp_XemKetQua','Sinhvien'), ('sp_XemKetQua','Giangvien'),
     ('sp_XemKetQua','CoSo'),     ('sp_XemKetQua','Truong'),
+
+    /*--- Câu 9: danh sách bài thi. Sinh viên xem bài CỦA MÌNH ---*/
+    ('sp_DS_BaiThi_SV','Sinhvien'), ('sp_DS_BaiThi_SV','Giangvien'),
+    ('sp_DS_BaiThi_SV','CoSo'),     ('sp_DS_BaiThi_SV','Truong'),
+
+    /*--- Câu 9 - PHÚC KHẢO: giảng viên chọn lớp rồi chọn sinh viên.
+          CỐ Ý không cấp cho Sinhvien: các em chỉ xem bài của chính mình,
+          không được liệt kê bạn cùng lớp. ---*/
+    ('sp_DS_Lop_CoBaiThi','Giangvien'),      ('sp_DS_Lop_CoBaiThi','CoSo'),
+    ('sp_DS_Lop_CoBaiThi','Truong'),
+    ('sp_DS_SinhVien_CoBaiThi','Giangvien'), ('sp_DS_SinhVien_CoBaiThi','CoSo'),
+    ('sp_DS_SinhVien_CoBaiThi','Truong'),
     ('sp_BangDiemMonHoc','Giangvien'), ('sp_BangDiemMonHoc','CoSo'),
     ('sp_BangDiemMonHoc','Truong'),
     ('sp_BaoCao_DangKy','CoSo'), ('sp_BaoCao_DangKy','Truong'),
