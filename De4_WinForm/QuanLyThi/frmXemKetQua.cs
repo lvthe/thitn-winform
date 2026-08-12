@@ -105,7 +105,7 @@ public class frmXemKetQua : Form
                 _lbl.Text = "Chưa có lớp nào có sinh viên đã thi tại cơ sở này.";
             else NapSinhVien();
         }
-        catch (SqlException ex) { _lbl.Text = "Lỗi: " + ex.Message; }
+        catch (Exception ex) { _lbl.Text = "Lỗi: " + ex.Message; }
     }
 
     private void Lop_Changed(object? s, EventArgs e) => NapSinhVien();
@@ -147,7 +147,7 @@ public class frmXemKetQua : Form
             }
             else ChonSinhVien();
         }
-        catch (SqlException ex) { _lbl.Text = "Lỗi: " + ex.Message; }
+        catch (Exception ex) { _lbl.Text = "Lỗi: " + ex.Message; }
     }
 
     private void ChonSinhVien()
@@ -182,7 +182,7 @@ public class frmXemKetQua : Form
             }
             else Xem();
         }
-        catch (SqlException ex) { _lbl.Text = "Lỗi: " + ex.Message; }
+        catch (Exception ex) { _lbl.Text = "Lỗi: " + ex.Message; }
     }
 
     private void Xem()
@@ -225,11 +225,16 @@ public class frmXemKetQua : Form
                 frmCrudBase.DatCot(_luoi, "DaChon", "Đã chọn", 7);
                 frmCrudBase.DatCot(_luoi, "KetQua", "Kết quả", 8);
 
-                var dung = _chiTiet.Select("KetQua = N'Đúng'").Length;
+                // Đếm bằng vòng lặp, KHÔNG dùng DataTable.Select: hàm đó ăn cú
+                // pháp biểu thức của .NET chứ không phải T-SQL, nên tiền tố
+                // N'...' sẽ ném SyntaxErrorException.
+                int dung = 0;
+                foreach (DataRow dong in _chiTiet.Rows)
+                    if ((dong["KetQua"]?.ToString() ?? "") == "Đúng") dung++;
                 _lbl.Text = $"{_chiTiet.Rows.Count} câu - đúng {dung} câu.";
             }
         }
-        catch (SqlException ex) { _lbl.Text = "Lỗi: " + ex.Message; }
+        catch (Exception ex) { _lbl.Text = "Lỗi: " + ex.Message; }
     }
 
     /// <summary>Bài thi in ra để đưa cho sinh viên khi phúc khảo.</summary>
