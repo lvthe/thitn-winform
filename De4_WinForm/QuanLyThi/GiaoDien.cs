@@ -116,6 +116,43 @@ public static class GiaoDien
         return p;
     }
 
+    /// <summary>
+    /// Dựng một hàng công cụ TỰ CO GIÃN (nhãn + control xen kẽ).
+    /// Dùng FlowLayoutPanel thay vì đặt Location/Size bằng pixel, vì số
+    /// pixel cứng sẽ bị cắt chữ trên màn hình phóng 125% / 150% / 175%.
+    /// </summary>
+    public static FlowLayoutPanel TaoHangCongCu(params Control[] cacControl)
+    {
+        var hang = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = true,          // cửa sổ hẹp thì xuống dòng, không cắt mất nút
+            Padding = new Padding(8, 6, 8, 2)
+        };
+        foreach (var c in cacControl)
+        {
+            c.Margin = new Padding(4, 3, 8, 3);
+            if (c is Label l) { l.AutoSize = true; l.Padding = new Padding(0, 6, 0, 0); }
+            if (c is Button b)
+            {
+                TrangTriNut(b);
+                // Nút phải TỰ GIÃN theo chữ, nếu không sẽ bị cắt còn mỗi biểu tượng
+                b.AutoSize = true;
+                b.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+                b.Padding = new Padding(10, 4, 10, 4);
+            }
+            hang.Controls.Add(c);
+        }
+        return hang;
+    }
+
+    /// <summary>Nhãn cho hàng công cụ - tự co theo chữ, không bao giờ bị cắt.</summary>
+    public static Label Nhan(string chu) =>
+        new() { Text = chu, AutoSize = true, Font = ChuThuong };
+
     /// <summary>Áp định dạng cho mọi lưới và nút bên trong một form.</summary>
     public static void ApDungCho(Control goc)
     {
