@@ -1,0 +1,21 @@
+# ---- Kết quả biên dịch ----
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# ---- Dữ liệu nhân bản (sinh ra khi cấu hình replication, riêng từng máy) ----
+ReplData/
+
+# ---- Tài liệu môn học của Thầy (bản quyền - không đưa lên repo công khai) ----
+Tailieu_CSDLPT/
+De4-TN-SQLSERVER_PhanTan.doc
+giai_de_4.txt
+
+# ---- Cấu hình công cụ cục bộ ----
+.claude/
+
+# ---- Bản sao lưu CSDL ----
+*.bak
+*.trn

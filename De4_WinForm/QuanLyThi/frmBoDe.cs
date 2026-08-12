@@ -1,0 +1,262 @@
+using System.Data;
+using Microsoft.Data.SqlClient;
+
+namespace QuanLyThi;
+
+/// <summary>
+/// CÂU 6 - Soạn BỘ ĐỀ (ngân hàng câu hỏi).
+/// Đề: giảng viên đăng nhập thì TỰ ĐỘNG chỉ thấy câu hỏi do chính mình
+/// soạn, và chỉ được sửa / xóa câu của mình. Ràng buộc này được ép ở
+/// TẦNG CSDL (các SP dùng SUSER_SNAME()), nên không thể lách từ ứng dụng.
+/// Mã câu hỏi do sp_Bode_Them tự cấp theo dải riêng của từng cơ sở.
+/// </summary>
+public class frmBoDe : Form
+{
+    private readonly ComboBox _cboMon = new();
+    private readonly DataGridView _luoi = new() { Dock = DockStyle.Fill };
+    private readonly BindingSource _bs = new();
+
+    // Panel soạn thảo
+    private readonly TextBox _txtNoiDung = new() { Multiline = true, ScrollBars = ScrollBars.Vertical };
+    private readonly TextBox _txtA = new(), _txtB = new(), _txtC = new(), _txtD = new();
+    private readonly ComboBox _cboTrinhDo = new(), _cboDapAn = new();
+    private readonly Label _lblCauHoi = new();
+
+    private readonly ToolStrip _nut = new();
+    private readonly ToolStripButton _btnThem = new("Thêm");
+    private readonly ToolStripButton _btnSua = new("Sửa");
+    private readonly ToolStripButton _btnXoa = new("Xóa");
+    private readonly ToolStripButton _btnPhucHoi = new("Phục hồi");
+    private readonly ToolStripButton _btnNapLai = new("Nạp lại");
+    private readonly StatusStrip _tt = new();
+    private readonly ToolStripStatusLabel _lbl = new();
+
+    private bool _dangThem;
+
+    public frmBoDe()
+    {
+        Text = "Câu 6 - Soạn bộ đề";
+        ClientSize = new Size(1000, 620);
+        StartPosition = FormStartPosition.CenterParent;
+        DungGiaoDien();
+
+        _btnThem.Click += (_, _) => BatDauThem();
+        _btnSua.Click += (_, _) => Ghi(sua: true);
+        _btnXoa.Click += (_, _) => Xoa();
+        _btnPhucHoi.Click += (_, _) => { _dangThem = false; HienChiTiet(); Bao("Đã phục hồi.", false); };
+        _btnNapLai.Click += (_, _) => Nap();
+        _cboMon.SelectedIndexChanged += (_, _) => Nap();
+        _bs.PositionChanged += (_, _) => { if (!_dangThem) HienChiTiet(); };
+
+        Load += (_, _) => KhoiTao();
+    }
+
+    private void DungGiaoDien()
+    {
+        _btnThem.Text = "➕  Thêm";
+        _btnSua.Text = "✏  Sửa";
+        _btnXoa.Text = "🗑  Xóa";
+        _btnPhucHoi.Text = "↩  Phục hồi";
+        _btnNapLai.Text = "🔄  Nạp lại";
+        _btnXoa.ForeColor = GiaoDien.DoCanhBao;
+        _nut.Items.AddRange(new ToolStripItem[]
+        { _btnThem, _btnSua, _btnXoa, new ToolStripSeparator(), _btnPhucHoi, _btnNapLai });
+        GiaoDien.TrangTriThanhNut(_nut);       // nút tự co giãn theo DPI
+        _tt.Items.Add(_lbl);
+
+        var loc = new Panel { Dock = DockStyle.Top, Height = 42 };
+        loc.Controls.Add(new Label { Text = "Môn học:", Location = new Point(10, 12), Size = new Size(70, 23) });
+        _cboMon.Location = new Point(84, 9); _cboMon.Size = new Size(300, 25);
+        _cboMon.DropDownStyle = ComboBoxStyle.DropDownList;
+        loc.Controls.Add(_cboMon);
+        loc.Controls.Add(_lblCauHoi);
+        _lblCauHoi.Location = new Point(400, 12); _lblCauHoi.Size = new Size(400, 23);
+        _lblCauHoi.ForeColor = SystemColors.GrayText;
+
+        _luoi.AllowUserToAddRows = false;
+        _luoi.AllowUserToDeleteRows = false;
+        _luoi.ReadOnly = true;
+        _luoi.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+        _luoi.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+        GiaoDien.TrangTriLuoi(_luoi);
+
+        // Panel soạn thảo bên dưới
+        var soan = new TableLayoutPanel
+        {
+            Dock = DockStyle.Bottom,
+            Height = 250,
+            ColumnCount = 4,
+            Padding = new Padding(8)
+        };
+        soan.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 90));
+        soan.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60));
+        soan.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 90));
+        soan.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40));
+
+        _txtNoiDung.Dock = DockStyle.Fill;
+        foreach (var t in new[] { _txtA, _txtB, _txtC, _txtD }) t.Dock = DockStyle.Fill;
+        _cboTrinhDo.DropDownStyle = ComboBoxStyle.DropDownList;
+        _cboTrinhDo.Items.AddRange(new object[] { "A", "B", "C" });
+        _cboDapAn.DropDownStyle = ComboBoxStyle.DropDownList;
+        _cboDapAn.Items.AddRange(new object[] { "A", "B", "C", "D" });
+
+        soan.Controls.Add(new Label { Text = "Nội dung:", Dock = DockStyle.Fill }, 0, 0);
+        soan.Controls.Add(_txtNoiDung, 1, 0);
+        soan.SetRowSpan(_txtNoiDung, 2);
+        soan.Controls.Add(new Label { Text = "Trình độ:", Dock = DockStyle.Fill }, 2, 0);
+        soan.Controls.Add(_cboTrinhDo, 3, 0);
+        soan.Controls.Add(new Label { Text = "Đáp án đúng:", Dock = DockStyle.Fill }, 2, 1);
+        soan.Controls.Add(_cboDapAn, 3, 1);
+
+        soan.Controls.Add(new Label { Text = "A.", Dock = DockStyle.Fill }, 0, 2);
+        soan.Controls.Add(_txtA, 1, 2);
+        soan.Controls.Add(new Label { Text = "B.", Dock = DockStyle.Fill }, 2, 2);
+        soan.Controls.Add(_txtB, 3, 2);
+        soan.Controls.Add(new Label { Text = "C.", Dock = DockStyle.Fill }, 0, 3);
+        soan.Controls.Add(_txtC, 1, 3);
+        soan.Controls.Add(new Label { Text = "D.", Dock = DockStyle.Fill }, 2, 3);
+        soan.Controls.Add(_txtD, 3, 3);
+
+        var btnGhi = new Button { Text = "Ghi câu hỏi", Dock = DockStyle.Fill, Height = 34 };
+        btnGhi.Click += (_, _) => Ghi(sua: !_dangThem);
+        soan.Controls.Add(btnGhi, 3, 4);
+
+        Controls.Add(_luoi);
+        Controls.Add(soan);
+        Controls.Add(loc);
+        Controls.Add(_nut);
+        Controls.Add(_tt);
+    }
+
+    private void KhoiTao()
+    {
+        try
+        {
+            var mon = DataProvider.TruyVan("SELECT MAMH, TENMH FROM dbo.MONHOC ORDER BY MAMH");
+            _cboMon.DataSource = mon;
+            _cboMon.DisplayMember = "TENMH";
+            _cboMon.ValueMember = "MAMH";
+        }
+        catch (Exception ex) { Bao("Không nạp được môn học: " + ex.Message, true); }
+
+        _lblCauHoi.Text = Phien.VaiTro == "Giangvien"
+            ? $"Chỉ hiện câu hỏi do {Phien.Ma} soạn (ràng buộc ở tầng CSDL)."
+            : "Nhóm Cơ sở: xem được toàn bộ câu hỏi của phân mảnh.";
+        Nap();
+    }
+
+    private string MaMon() => _cboMon.SelectedValue?.ToString()?.Trim() ?? "";
+
+    private void Nap()
+    {
+        try
+        {
+            var dt = DataProvider.GoiSP("dbo.sp_Bode_DS",
+                new SqlParameter("@MAMH", SqlDbType.Char, 5) { Value = MaMon() });
+            _bs.DataSource = dt;
+            _luoi.DataSource = _bs;
+
+            foreach (var c in new[] { "a", "b", "c", "d" })
+                if (_luoi.Columns.Contains(c)) _luoi.Columns[c]!.Visible = false;
+            frmCrudBase.DatCot(_luoi, "cauhoi", "Mã câu", 14);
+            frmCrudBase.DatCot(_luoi, "mamh", "Môn", 12);
+            frmCrudBase.DatCot(_luoi, "trinhdo", "Trình độ", 12);
+            frmCrudBase.DatCot(_luoi, "noidung", "Nội dung", 46);
+            frmCrudBase.DatCot(_luoi, "dap_an", "Đáp án", 10);
+            frmCrudBase.DatCot(_luoi, "magv", "GV soạn", 14);
+
+            _dangThem = false;
+            HienChiTiet();
+            Bao($"{dt.Rows.Count} câu hỏi.", false);
+        }
+        catch (SqlException ex) { Bao(ex.Message, true); }
+    }
+
+    private void HienChiTiet()
+    {
+        if (_bs.Current is not DataRowView r) { XoaTrangPanel(); return; }
+        _txtNoiDung.Text = r["noidung"]?.ToString() ?? "";
+        _txtA.Text = r["a"]?.ToString() ?? "";
+        _txtB.Text = r["b"]?.ToString() ?? "";
+        _txtC.Text = r["c"]?.ToString() ?? "";
+        _txtD.Text = r["d"]?.ToString() ?? "";
+        _cboTrinhDo.SelectedItem = r["trinhdo"]?.ToString()?.Trim();
+        _cboDapAn.SelectedItem = r["dap_an"]?.ToString()?.Trim();
+    }
+
+    private void XoaTrangPanel()
+    {
+        _txtNoiDung.Clear(); _txtA.Clear(); _txtB.Clear(); _txtC.Clear(); _txtD.Clear();
+        _cboTrinhDo.SelectedIndex = -1; _cboDapAn.SelectedIndex = -1;
+    }
+
+    private void BatDauThem()
+    {
+        _dangThem = true;
+        XoaTrangPanel();
+        _cboTrinhDo.SelectedItem = "A";
+        _cboDapAn.SelectedItem = "A";
+        _txtNoiDung.Focus();
+        Bao("Đang soạn câu hỏi mới - nhập xong bấm Ghi câu hỏi. Mã câu do hệ thống tự cấp.", false);
+    }
+
+    private void Ghi(bool sua)
+    {
+        if (_cboTrinhDo.SelectedItem == null || _cboDapAn.SelectedItem == null)
+        { Bao("Chọn trình độ và đáp án đúng.", true); return; }
+        if (_txtNoiDung.Text.Trim().Length == 0)
+        { Bao("Nội dung câu hỏi không được để trống.", true); return; }
+
+        var thamSo = new List<SqlParameter>
+        {
+            new("@MAMH",    SqlDbType.Char, 5)      { Value = MaMon() },
+            new("@TRINHDO", SqlDbType.Char, 1)      { Value = _cboTrinhDo.SelectedItem!.ToString() },
+            new("@NOIDUNG", SqlDbType.NVarChar, -1) { Value = _txtNoiDung.Text },
+            new("@A", SqlDbType.NVarChar, -1) { Value = _txtA.Text },
+            new("@B", SqlDbType.NVarChar, -1) { Value = _txtB.Text },
+            new("@C", SqlDbType.NVarChar, -1) { Value = _txtC.Text },
+            new("@D", SqlDbType.NVarChar, -1) { Value = _txtD.Text },
+            new("@DAP_AN", SqlDbType.Char, 1) { Value = _cboDapAn.SelectedItem!.ToString() },
+        };
+
+        try
+        {
+            if (_dangThem || !sua)
+            {
+                var dt = DataProvider.GoiSP("dbo.sp_Bode_Them", thamSo.ToArray());
+                var ma = dt.Rows.Count > 0 ? dt.Rows[0][0]?.ToString() : "?";
+                Bao($"Đã thêm câu hỏi mã {ma}.", false);
+            }
+            else
+            {
+                if (_bs.Current is not DataRowView r) { Bao("Chưa chọn câu hỏi để sửa.", true); return; }
+                thamSo.Insert(0, new SqlParameter("@CAUHOI", SqlDbType.Int) { Value = r["cauhoi"] });
+                DataProvider.GoiSP("dbo.sp_Bode_Sua", thamSo.ToArray());
+                Bao("Đã sửa câu hỏi.", false);
+            }
+            Nap();
+        }
+        catch (SqlException ex) { Bao(ex.Message, true); }
+    }
+
+    private void Xoa()
+    {
+        if (_bs.Current is not DataRowView r) { Bao("Chưa chọn câu hỏi.", true); return; }
+        if (MessageBox.Show($"Xóa câu hỏi mã {r["cauhoi"]}?", "Xác nhận",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+        try
+        {
+            DataProvider.GoiSP("dbo.sp_Bode_Xoa",
+                new SqlParameter("@CAUHOI", SqlDbType.Int) { Value = r["cauhoi"] });
+            Bao("Đã xóa câu hỏi.", false);
+            Nap();
+        }
+        catch (SqlException ex) { Bao(ex.Message, true); }
+    }
+
+    private void Bao(string s, bool loi)
+    {
+        _lbl.ForeColor = loi ? Color.Firebrick : SystemColors.ControlText;
+        _lbl.Text = s;
+    }
+}
