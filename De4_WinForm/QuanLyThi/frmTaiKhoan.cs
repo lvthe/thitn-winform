@@ -109,12 +109,24 @@ public partial class frmTaiKhoan : Form
                 Phien.MatKhau = txtMoi.Text;
             }
 
-            lblKetQua.ForeColor = Color.SeaGreen;
-            lblKetQua.Text = dt.Rows.Count > 0 ? dt.Rows[0][0]?.ToString() : "Đổi mật khẩu thành công.";
             txtCu.Clear(); txtMoi.Clear(); txtXacNhan.Clear();
+
+            // Đổi mật khẩu xong thì BẮT ĐĂNG NHẬP LẠI. Hợp lý vì:
+            //  - Cán bộ: phiên hiện tại đang giữ mật khẩu CŨ trong Phien.MatKhau,
+            //    mọi kết nối mở sau đó sẽ dùng mật khẩu đã hết hiệu lực.
+            //  - Sinh viên: xác nhận ngay rằng mật khẩu mới dùng được.
+            MessageBox.Show(
+                (dt.Rows.Count > 0 ? dt.Rows[0][0]?.ToString() : "Đổi mật khẩu thành công.")
+                + "\r\n\r\nVui lòng đăng nhập lại bằng mật khẩu mới.",
+                "Đổi mật khẩu", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            // Retry = tín hiệu cho frmMain đóng lại và quay về màn đăng nhập
+            DialogResult = DialogResult.Retry;
+            Close();
         }
         catch (SqlException ex)
         {
+            lblKetQua.ForeColor = Color.Firebrick;
             lblKetQua.Text = ex.Message;
         }
     }

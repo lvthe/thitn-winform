@@ -58,7 +58,14 @@ public partial class frmMain : Form
     private void mnuTaoLogin_Click(object? sender, EventArgs e)
     {
         using var f = new frmTaiKhoan();
-        f.ShowDialog(this);
+        // frmTaiKhoan trả về Retry sau khi ĐỔI MẬT KHẨU thành công:
+        // phiên hiện tại còn giữ mật khẩu cũ nên phải đăng nhập lại.
+        if (f.ShowDialog(this) == DialogResult.Retry)
+        {
+            Phien.Xoa();
+            DialogResult = DialogResult.Retry;   // Program.Main mở lại form đăng nhập
+            Close();
+        }
     }
 
     private void mnuTraCuu_Click(object? sender, EventArgs e)
