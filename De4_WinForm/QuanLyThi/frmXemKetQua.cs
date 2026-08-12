@@ -55,23 +55,31 @@ public class frmXemKetQua : Form
         Load += (_, _) => NapDanhSachBai();
     }
 
+    /// <summary>
+    /// Nạp danh sách bài thi đã có điểm.
+    ///
+    /// PHẢI đi qua stored procedure, KHÔNG truy vấn thẳng bảng: toàn bộ
+    /// sinh viên dùng chung một tài khoản SQL và nhóm Sinhvien không được
+    /// cấp quyền đọc bảng (thiết kế ngay từ đầu). Truy vấn thẳng sẽ bị
+    /// chặn với lỗi "SELECT permission was denied on MONHOC", và màn hình
+    /// chỉ hiện danh sách trống nên rất khó đoán ra nguyên nhân.
+    /// </summary>
     private void NapDanhSachBai()
     {
         try
         {
-            var dt = DataProvider.TruyVan(@"
-                SELECT DISTINCT bd.MAMH, bd.LAN,
-                       MOTA = RTRIM(mh.TENMH) + N' - lần ' + CAST(bd.LAN AS nvarchar(2))
-                            + N'  (điểm ' + CAST(CAST(bd.DIEM AS decimal(4,1)) AS nvarchar(6)) + N')'
-                FROM dbo.BangDiem bd JOIN dbo.Monhoc mh ON bd.MAMH = mh.MAMH
-                WHERE bd.MASV = @masv
-                ORDER BY bd.MAMH, bd.LAN",
-                new SqlParameter("@masv", SqlDbType.Char, 8) { Value = Phien.Ma });
+            var dt = DataProvider.GoiSP("dbo.sp_DS_BaiThi_SV",
+                new SqlParameter("@MASV", SqlDbType.Char, 8) { Value = Phien.Ma });
 
             _cboBai.DataSource = dt;
             _cboBai.DisplayMember = "MOTA";
 
-            if (dt.Rows.Count == 0) _lbl.Text = "Bạn chưa có bài thi nào có điểm.";
+            if (dt.Rows.Count == 0)
+            {
+                _luoi.DataSource = null;
+                _lblDau.Text = "";
+                _lbl.Text = "Bạn chưa có bài thi nào có điểm.";
+            }
             else Xem();
         }
         catch (SqlException ex) { _lbl.Text = "Lỗi: " + ex.Message; }
