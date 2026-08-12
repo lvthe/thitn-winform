@@ -146,11 +146,89 @@ Thêm: xem trước / in, xuất Excel, cột **Số câu** có tổng ở Repor
 
 ---
 
-## PHẦN 3 — CÒN LẠI
+## PHẦN 3 — VÌ SAO PHẢI VIẾT SP Ở MÁY CHỦ (bằng chứng thực tế)
+
+Thầy dặn điều này **hai lần** — trong `HD FORM DANG NHAP.docx` và lại trong bài giảng báo cáo:
+
+> *"Bắt buộc phải viết SP này ở **server chủ**, sau đó **đẩy nó xuống các phân mảnh**."*
+
+Ban đầu tưởng đây chỉ là khác biệt về cách triển khai, vì deploy trực tiếp lên từng phân mảnh thì **cũng chạy được**. Kiểm tra thực tế cho thấy **không phải vậy**.
+
+### Cái bẫy
+
+23 thủ tục trong đồ án **đã được khai báo là Article** (lưu trong `sysmergeschemaarticles`, không phải `sysmergearticles` — nên tra nhầm bảng sẽ tưởng là chưa có). Khi một thủ tục đã là Article thì:
+
+> **Nhân bản sẽ GHI ĐÈ bản sửa trực tiếp trên phân mảnh bằng bản của máy chủ.**
+
+Nghĩa là mọi lần sửa thủ tục trực tiếp trên SERVER1/SERVER2 đều **âm thầm bị mất** ở lần đồng bộ kế tiếp.
+
+### Hậu quả đã đo được
+
+So sánh định nghĩa 27 thủ tục giữa 3 server (đã chuẩn hoá để bỏ qua khác biệt ngoặc vuông / khoảng trắng):
+
+| Thủ tục | SERVER1 | SERVER2 | Hậu quả nếu không phát hiện |
+|---|---|---|---|
+| `sp_BangDiemMonHoc` | khớp | **LỆCH — bản cũ** | Câu 10 ở CS2 **không làm tròn 0.5** |
+| `sp_ChuanBiThi` | khớp | **LỆCH — bản cũ** | Câu 7 ở CS2 đếm kho đề sai (không lọc `MACS`) |
+| `sp_LayDeThi` | khớp | **LỆCH — bản cũ** | Câu 8 ở CS2 **mượn đề không chạy** (thiếu bản vá khoá `(CAUHOI, NGUON)`) |
+| `sp_ChotBaoCao_DangKy` | thiếu | thiếu | Chưa có ở phân mảnh |
+| `sp_LamMoi_BodeMuon` | thiếu | thiếu | Chưa có ở phân mảnh |
+
+Ba bản vá quan trọng nhất của đồ án đã bị nhân bản ghi đè mất trên CS2 — mà giao diện vẫn chạy bình thường nên không hề lộ ra.
+
+### Cách làm đúng từ nay
+
+```
+        SỬA THỦ TỤC
+             │
+             ▼
+   ┌──────────────────┐
+   │  MÁY CHỦ (SERVER)│   ← chỉ sửa Ở ĐÂY
+   └────────┬─────────┘
+            │ nhân bản đẩy xuống (schema article)
+      ┌─────┴─────┐
+      ▼           ▼
+   SERVER1     SERVER2      ← KHÔNG bao giờ sửa trực tiếp
+```
+
+Script `SQL/11_SP_LamArticle.sql` kiểm tra và bổ sung thủ tục còn thiếu vào publication.
+
+> **Bài học rút ra:** khi thủ tục đã là Article, sửa trực tiếp trên phân mảnh là việc *vô nghĩa và nguy hiểm* — nó tạo cảm giác đã sửa xong trong khi thực tế sẽ bị hoàn tác. Đây chính là lý do Thầy nhắc tới hai lần.
+
+### Đã khắc phục
+
+1. Nạp bản đúng của cả 3 thủ tục lên **máy chủ** (nguồn gốc để nhân bản).
+2. Đồng bộ lại xuống hai phân mảnh.
+3. Thêm công cụ **`SQL/KiemTraDongBoSP.ps1`** để dò lệch bất cứ lúc nào:
+
+```
+.\KiemTraDongBoSP.ps1
+```
+
+Kết quả sau khi sửa:
+
+```
+THU TUC                          SERVER1      SERVER2
+----------------------------------------------------------
+TAT CA THU TUC DEU KHOP giua may chu va hai phan manh.
+Da doi chieu 21 thu tuc (bo qua 6 tien ich chi o may chu).
+```
+
+Công cụ **chuẩn hoá** trước khi so sánh (bỏ qua khác biệt `[dbo].[sp_X]` với `dbo.sp_X` và khoảng trắng) nên không báo động giả — lần dò đầu tiên chưa chuẩn hoá đã báo nhầm 17 thủ tục lệch, trong khi thực tế chỉ 5.
+
+### Sáu tiện ích CỐ Ý chỉ giữ ở máy chủ
+
+| Thủ tục | Lý do |
+|---|---|
+| `sp_LamMoi_BodeMuon` | Gom `BODE` của **cả hai** cơ sở để dựng kho đề mượn. Chạy trên phân mảnh chỉ thấy đề của chính nó → kết quả **sai** |
+| `sp_ChotBaoCao_DangKy` | Job chốt số liệu định kỳ |
+| `SP_SAOLUU`, `SP_PHUCHOI_CSDL`, `SP_DS_SAOLUU` | Hạ tầng riêng từng instance |
+| `SP_TAOLOGIN` | Tạo login cục bộ trên chính server đang chạy |
+
+## PHẦN 3B — CÒN LẠI
 
 | # | Việc | Ghi chú |
 |---|---|---|
-| 1 | **Đưa SP báo cáo lên server chủ rồi publish làm Article** | Thầy dạy vậy. Hiện deploy trực tiếp từng phân mảnh nên **chạy đúng**, chỉ khác cách triển khai. Nếu Thầy hỏi thì giải thích được |
 | 2 | **Báo cáo có NHÓM số liệu** | Thầy có nhắc loại report "nhóm số liệu theo từng nhóm". Câu 11 hiện sắp theo cơ sở nhưng chưa có band nhóm riêng với tổng con từng cơ sở |
 | 3 | Câu 9 (`frmXemKetQua`) chưa gắn bộ máy in mới | Hiện chỉ xem trên lưới. Có thể thêm nút Xem trước / In như hai báo cáo kia |
 
