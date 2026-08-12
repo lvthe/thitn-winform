@@ -11,18 +11,25 @@ namespace QuanLyThi;
 /// </summary>
 internal static class ChupManHinh
 {
-    public static void Chay(string thuMuc)
+    /// <param name="thuMuc">Thư mục lưu ảnh</param>
+    /// <param name="vaiTro">CoSo (mặc định) hoặc Truong - để kiểm chế độ chỉ xem</param>
+    public static void Chay(string thuMuc, string vaiTro = "CoSo")
     {
         Directory.CreateDirectory(thuMuc);
 
-        // Giả lập phiên đăng nhập của tài khoản Cơ sở 1
+        // Giả lập phiên đăng nhập trên phân mảnh Cơ sở 1
         Phien.Server = AppConfig.PhanManhDuPhong[0].Server;
         Phien.TenPhanManh = AppConfig.PhanManhDuPhong[0].Ten;
-        Phien.Login = "coso1";
-        Phien.MatKhau = "Coso@123";
-        Phien.Ma = "coso1";
-        Phien.HoTen = "coso1";
-        Phien.VaiTro = "CoSo";
+        if (vaiTro == "Truong")
+        {
+            Phien.Login = "truong01"; Phien.MatKhau = "Truong@123";
+            Phien.Ma = "truong01"; Phien.HoTen = "truong01"; Phien.VaiTro = "Truong";
+        }
+        else
+        {
+            Phien.Login = "coso1"; Phien.MatKhau = "Coso@123";
+            Phien.Ma = "coso1"; Phien.HoTen = "coso1"; Phien.VaiTro = "CoSo";
+        }
 
         Chup(thuMuc, "01_MonHoc", () => new frmMonHoc());
         Chup(thuMuc, "02_KhoaLop", () => new frmKhoaLop());

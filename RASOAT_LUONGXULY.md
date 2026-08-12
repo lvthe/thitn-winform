@@ -419,9 +419,43 @@ Script: `SQL/09_VaLoHongPhanQuyen.sql`
 | 1 | **`SP_LayThongTinNguoiDung` chưa là Article** | Nhỏ | Thầy dặn *"định nghĩa sp này là 1 Article trên các phân mảnh"*. Hiện deploy trực tiếp lên từng server nên **chạy đúng**, chỉ khác cách triển khai |
 | 2 | **`V_DS_PHANMANH` đọc bằng Integrated Security** | Vừa | Chạy tốt trên máy này. Đem sang máy khác mà tài khoản Windows không có quyền trên publisher thì ComboBox rơi về danh sách dự phòng cứng trong `AppConfig` |
 | 3 | **`sp_MoLaiBaiThi` / `sp_ThoiGianConLai` chưa được app gọi** | Nhỏ | Phục vụ option *"khôi phục bài thi khi cúp điện"*. SP có sẵn, hạ tầng có sẵn (`PhieuThi.BATDAU/HANNOP/DANOP`), chỉ thiếu nút bấm. **Là option cộng điểm, không bắt buộc** |
-| 4 | **Trưởng chưa xem được danh mục của cơ sở** | Vừa | Đề: *"đăng nhập vào bất kỳ phân mảnh nào để có thể xem… xem thôi"*. Hiện Trưởng chỉ có Tra cứu + Báo cáo. Nếu Thầy hỏi "xem dữ liệu cơ sở" thì nên mở các form danh mục ở chế độ **chỉ đọc** cho Trưởng |
+| 4 | ~~Trưởng chưa xem được danh mục của cơ sở~~ | ✅ **ĐÃ XONG** | Xem mục C4 bên dưới |
 | 5 | **Đảo đáp án A/B/C/D khi ra đề** | Option | Thầy gợi ý cộng điểm. Chưa làm |
 | 6 | **`PhieuThi_CauHoi` lưu lặp nội dung câu hỏi** | Cần lý lẽ | Xem phần D |
+
+### C4. Nhóm Trưởng — chế độ CHỈ XEM (đã bổ sung)
+
+Đề: *"nhóm trưởng được quyền đăng nhập vào bất kỳ phân mảnh nào để có thể **xem**… xem thôi, không được quyền thêm xóa sửa"* và *"khi đăng nhập một cơ sở đó thì chỉ được xem dữ liệu của cơ sở đó"*.
+
+**Chặn ở hai tầng — tầng CSDL là tầng thật:**
+
+```
+1. TẦNG CSDL  (SQL/10_Truong_ChiXem.sql)  ← đây mới là ràng buộc thật
+      GRANT SELECT ON DATABASE::TN_CSDLPT TO [Truong]     (đã có từ bước 02)
+      GRANT EXECUTE ON dbo.sp_Bode_DS     TO [Truong]     ← bổ sung, để xem bộ đề
+      DENY INSERT, UPDATE, DELETE trên MỌI bảng TO [Truong]
+
+   Dùng DENY chứ không chỉ "không GRANT": DENY mạnh hơn GRANT nên
+   sau này lỡ ai cấp nhầm quyền ghi cho nhóm Trưởng thì vẫn bị chặn.
+
+2. TẦNG GIAO DIỆN  (Phien.ChiXem)          ← chỉ để khỏi bấm nhầm
+      frmCrudBase  : tự khoá Thêm/Xóa/Ghi/Phục hồi + hiện băng vàng nhắc
+      frmKhoaLop   : khoá 5 nút, hai lưới chuyển ReadOnly
+      frmBoDe      : khoá nút; ô nội dung để ReadOnly (vẫn ĐỌC được chữ,
+                     khác với Disabled sẽ làm chữ mờ khó đọc)
+      frmMain      : mở menu Danh mục, đổi nhãn "Danh mục (chỉ xem)"
+```
+
+**Kiểm chứng bằng chính tài khoản `truong01`:**
+
+| Thao tác | Kết quả |
+|---|---|
+| `SELECT` MONHOC / KHOA / LOP / SINHVIEN / GIAOVIEN | ✅ đọc được |
+| `EXEC sp_Bode_DS` | ✅ thấy toàn bộ câu hỏi của phân mảnh |
+| `INSERT INTO MONHOC` | ✅ **bị chặn** — *The INSERT permission was denied* |
+| `UPDATE SINHVIEN` | ✅ **bị chặn** — *The UPDATE permission was denied* |
+
+> Ghi chú về `sp_Bode_DS`: bên trong SP, biến `@magv` chỉ được gán khi người gọi thuộc nhóm `Giangvien`. Với Trưởng thì `@magv = NULL` nên trả về **toàn bộ** câu hỏi — đúng ý "xem dữ liệu của cơ sở đó", không bị lọc nhầm thành "đề của chính mình".
 
 ### C3. Đã đạt — không cần sửa
 

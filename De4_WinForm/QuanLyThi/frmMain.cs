@@ -20,13 +20,18 @@ public partial class frmMain : Form
         bool laGV = Phien.VaiTro == "Giangvien";
         bool laSV = Phien.VaiTro == "Sinhvien";
 
-        // Đề: Trưởng CHỈ XEM (tra cứu + báo cáo), không CRUD.
-        mnuDanhMuc.Visible = laCoSo || laGV;
-        mnuMonHoc.Visible = laCoSo;
-        mnuKhoaLop.Visible = laCoSo;
-        mnuSinhVien.Visible = laCoSo;
-        mnuGiaoVien.Visible = laCoSo;
-        mnuBoDe.Visible = laGV;
+        // Đề: "nhóm Trưởng được quyền đăng nhập vào bất kỳ phân mảnh nào để
+        // có thể XEM… xem thôi, không được quyền thêm xóa sửa".
+        // => Trưởng vẫn MỞ ĐƯỢC các màn danh mục, nhưng ở chế độ chỉ xem
+        //    (frmCrudBase tự khoá nút khi Phien.ChiXem = true, và SQL Server
+        //     chỉ GRANT SELECT cho role Truong nên có lách cũng không ghi được).
+        mnuDanhMuc.Visible = laCoSo || laGV || laTruong;
+        mnuMonHoc.Visible = laCoSo || laTruong;
+        mnuKhoaLop.Visible = laCoSo || laTruong;
+        mnuSinhVien.Visible = laCoSo || laTruong;
+        mnuGiaoVien.Visible = laCoSo || laTruong;
+        mnuBoDe.Visible = laGV || laTruong;
+        if (laTruong) mnuDanhMuc.Text = "📋  Danh mục (chỉ xem)";
 
         mnuThi.Visible = laSV || laGV || laCoSo;
         mnuChuanBiThi.Visible = laGV || laCoSo;

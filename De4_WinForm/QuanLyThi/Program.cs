@@ -9,7 +9,9 @@ static class Program
 
         // Chế độ chụp ảnh màn hình để kiểm tra giao diện (dùng khi phát triển):
         //     QuanLyThi.exe --chup <thu-muc>
-        if (args.Length >= 2 && args[0] == "--chup") { ChupManHinh.Chay(args[1]); return; }
+        //     QuanLyThi.exe --chup <thu-muc> [CoSo|Truong]
+        if (args.Length >= 2 && args[0] == "--chup")
+        { ChupManHinh.Chay(args[1], args.Length >= 3 ? args[2] : "CoSo"); return; }
 
         // Vòng lặp: đăng nhập -> làm việc -> đăng xuất -> đăng nhập lại...
         while (true)

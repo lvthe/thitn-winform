@@ -30,6 +30,7 @@ public class frmBoDe : Form
     private readonly ToolStripButton _btnNapLai = new("Nạp lại");
     private readonly StatusStrip _tt = new();
     private readonly ToolStripStatusLabel _lbl = new();
+    private readonly Button _btnGhiCau = new() { Text = "Ghi câu hỏi", Dock = DockStyle.Fill };
 
     private bool _dangThem;
 
@@ -47,6 +48,18 @@ public class frmBoDe : Form
         _btnNapLai.Click += (_, _) => Nap();
         _cboMon.SelectedIndexChanged += (_, _) => Nap();
         _bs.PositionChanged += (_, _) => { if (!_dangThem) HienChiTiet(); };
+
+        // Nhóm Trưởng: chỉ xem đề thi, không soạn / sửa / xóa (đề).
+        if (Phien.ChiXem)
+        {
+            foreach (var b in new[] { _btnThem, _btnSua, _btnXoa, _btnPhucHoi })
+                b.Enabled = false;
+            foreach (var t in new[] { _txtNoiDung, _txtA, _txtB, _txtC, _txtD })
+                t.ReadOnly = true;                 // vẫn đọc được nội dung, chỉ không sửa
+            _cboTrinhDo.Enabled = _cboDapAn.Enabled = false;
+            _btnGhiCau.Enabled = false;
+            Text += " — chỉ xem";
+        }
 
         Load += (_, _) => KhoiTao();
     }
@@ -70,7 +83,8 @@ public class frmBoDe : Form
         _cboMon.DropDownStyle = ComboBoxStyle.DropDownList;
         loc.Controls.Add(_cboMon);
         loc.Controls.Add(_lblCauHoi);
-        _lblCauHoi.Location = new Point(400, 12); _lblCauHoi.Size = new Size(400, 23);
+        _lblCauHoi.Location = new Point(400, 12);
+        _lblCauHoi.AutoSize = true;                 // không cắt chữ khi màn hình phóng to
         _lblCauHoi.ForeColor = SystemColors.GrayText;
 
         _luoi.AllowUserToAddRows = false;
@@ -117,9 +131,9 @@ public class frmBoDe : Form
         soan.Controls.Add(new Label { Text = "D.", Dock = DockStyle.Fill }, 2, 3);
         soan.Controls.Add(_txtD, 3, 3);
 
-        var btnGhi = new Button { Text = "Ghi câu hỏi", Dock = DockStyle.Fill, Height = 34 };
-        btnGhi.Click += (_, _) => Ghi(sua: !_dangThem);
-        soan.Controls.Add(btnGhi, 3, 4);
+        _btnGhiCau.Height = LogicalToDeviceUnits(34);
+        _btnGhiCau.Click += (_, _) => Ghi(sua: !_dangThem);
+        soan.Controls.Add(_btnGhiCau, 3, 4);
 
         Controls.Add(_luoi);
         Controls.Add(soan);
@@ -139,9 +153,12 @@ public class frmBoDe : Form
         }
         catch (Exception ex) { Bao("Không nạp được môn học: " + ex.Message, true); }
 
-        _lblCauHoi.Text = Phien.VaiTro == "Giangvien"
-            ? $"Chỉ hiện câu hỏi do {Phien.Ma} soạn (ràng buộc ở tầng CSDL)."
-            : "Nhóm Cơ sở: xem được toàn bộ câu hỏi của phân mảnh.";
+        _lblCauHoi.Text = Phien.VaiTro switch
+        {
+            "Giangvien" => $"Chỉ hiện câu hỏi do {Phien.Ma} soạn (ràng buộc ở tầng CSDL).",
+            "Truong"    => "Nhóm Trưởng: xem toàn bộ câu hỏi của phân mảnh, không sửa.",
+            _           => "Nhóm Cơ sở: xem được toàn bộ câu hỏi của phân mảnh."
+        };
         Nap();
     }
 

@@ -54,6 +54,15 @@ public static class Phien
     public static string VaiTro = "";    // Truong | CoSo | Giangvien | Sinhvien
 
     public static bool LaSinhVien => VaiTro == "Sinhvien";
+
+    /// <summary>
+    /// Nhóm Trưởng CHỈ ĐƯỢC XEM. Đề: "nhóm trưởng được quyền đăng nhập vào
+    /// bất kỳ phân mảnh nào để có thể xem ... xem thôi, không được quyền
+    /// thêm xóa sửa". Ràng buộc thật nằm ở SQL Server (role Truong chỉ được
+    /// GRANT SELECT); cờ này chỉ để giao diện khoá nút cho khỏi bấm nhầm.
+    /// </summary>
+    public static bool ChiXem => VaiTro == "Truong";
+
     public static void Xoa() { Server = TenPhanManh = Login = MatKhau = Ma = HoTen = VaiTro = ""; }
 }
 

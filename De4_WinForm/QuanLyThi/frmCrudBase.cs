@@ -24,12 +24,41 @@ public partial class frmCrudBase : Form
         Font = GiaoDien.ChuThuong;
     }
 
-    /// <summary>Lớp con gọi hàm này để khai báo bảng và cột hiển thị.</summary>
+    /// <summary>
+    /// Lớp con gọi hàm này để khai báo bảng và cột hiển thị.
+    /// Nếu người đăng nhập thuộc nhóm Trưởng thì form TỰ ĐỘNG chuyển sang
+    /// chế độ chỉ xem, không cần lớp con phải nhớ truyền tham số.
+    /// </summary>
     protected void CauHinh(BangCrud bang, bool chiDoc = false)
     {
         Bang = bang;
-        _chiDoc = chiDoc;
+        _chiDoc = chiDoc || Phien.ChiXem;
+        if (_chiDoc) HienBangChiXem();
         Nap();
+    }
+
+    /// <summary>Băng nhắc phía trên lưới khi form đang ở chế độ chỉ xem.</summary>
+    private void HienBangChiXem()
+    {
+        if (Controls.ContainsKey("bangChiXem")) return;
+        var bang = new Label
+        {
+            Name = "bangChiXem",
+            Dock = DockStyle.Top,
+            Height = LogicalToDeviceUnits(30),
+            TextAlign = ContentAlignment.MiddleLeft,
+            Padding = new Padding(LogicalToDeviceUnits(10), 0, 0, 0),
+            BackColor = Color.FromArgb(255, 244, 214),
+            ForeColor = Color.FromArgb(124, 84, 0),
+            Font = GiaoDien.ChuDam,
+            Text = "🔒  Chế độ CHỈ XEM — nhóm Trưởng không được thêm / sửa / xóa dữ liệu."
+        };
+        Controls.Add(bang);
+        // Với control neo Top, control có z-index LỚN hơn được neo TRƯỚC.
+        // Muốn thứ tự trên xuống là: thanh nút -> băng nhắc -> lưới,
+        // thì băng phải đứng NGAY TRƯỚC thanh nút trong danh sách
+        // (đặt vào đúng vị trí của thanh nút, đẩy thanh nút lùi 1 bậc).
+        Controls.SetChildIndex(bang, Controls.GetChildIndex(thanhNut));
     }
 
     protected virtual SqlParameter[] ThamSoNap() => Array.Empty<SqlParameter>();

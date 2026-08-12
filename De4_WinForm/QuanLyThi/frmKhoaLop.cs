@@ -78,6 +78,26 @@ public class frmKhoaLop : Form
         _btnPhucHoi.Click += (_, _) => PhucHoi();
         _btnNapLai.Click += (_, _) => Nap();
 
+        // Nhóm Trưởng: chỉ xem (đề). SQL Server cũng chỉ GRANT SELECT cho role này.
+        if (Phien.ChiXem)
+        {
+            foreach (var b in new[] { _btnThemKhoa, _btnThemLop, _btnXoa, _btnGhi, _btnPhucHoi })
+                b.Enabled = false;
+            _luoiKhoa.ReadOnly = _luoiLop.ReadOnly = true;
+            Controls.Add(new Label
+            {
+                Dock = DockStyle.Top,
+                Height = LogicalToDeviceUnits(30),
+                TextAlign = ContentAlignment.MiddleLeft,
+                Padding = new Padding(LogicalToDeviceUnits(10), 0, 0, 0),
+                BackColor = Color.FromArgb(255, 244, 214),
+                ForeColor = Color.FromArgb(124, 84, 0),
+                Font = GiaoDien.ChuDam,
+                Text = "🔒  Chế độ CHỈ XEM — nhóm Trưởng không được thêm / sửa / xóa dữ liệu."
+            });
+            Text += " — chỉ xem";
+        }
+
         Load += (_, _) => { Nap(); _chia.SplitterDistance = 230; };
     }
 
