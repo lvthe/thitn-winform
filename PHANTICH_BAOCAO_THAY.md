@@ -216,6 +216,53 @@ Da doi chieu 21 thu tuc (bo qua 6 tien ich chi o may chu).
 
 Công cụ **chuẩn hoá** trước khi so sánh (bỏ qua khác biệt `[dbo].[sp_X]` với `dbo.sp_X` và khoảng trắng) nên không báo động giả — lần dò đầu tiên chưa chuẩn hoá đã báo nhầm 17 thủ tục lệch, trong khi thực tế chỉ 5.
 
+### ⚠️ TÁC DỤNG PHỤ: nhân bản làm MẤT QUYỀN
+
+Ngay sau khi đồng bộ thủ tục thành công thì **đăng nhập vào ứng dụng bị báo "sai mật khẩu"** — trong khi tài khoản SQL vẫn hoàn toàn bình thường.
+
+Nguyên nhân: **quyền GRANT không nằm trong định nghĩa stored procedure.** Khi nhân bản đẩy thủ tục xuống, nó `DROP` thủ tục cũ rồi `CREATE` lại — mọi `GRANT` trên thủ tục đó **biến mất**.
+
+| Nhóm | Quyền EXECUTE sau khi nhân bản | Đáng lẽ |
+|---|---|---|
+| `Sinhvien` | **3** | 11 |
+| `Giangvien` | **7** | 17 |
+
+Mất `sp_DangNhap_SV` → ứng dụng không xác thực được sinh viên. Nhưng vì luồng đăng nhập bắt `SqlException` rồi chuyển sang nhánh sinh viên, lỗi *"EXECUTE permission denied"* bị nuốt và hiện ra thành **"Sai mã số hoặc mật khẩu"** — rất khó đoán ra nếu không biết cơ chế này.
+
+**Quy trình đúng, đủ ba bước:**
+
+```
+1. Sửa thủ tục trên MÁY CHỦ
+2. Nhân bản đẩy xuống phân mảnh
+3. CHẠY LẠI  SQL/12_CapLaiQuyen.sql     ← đừng quên bước này
+   rồi        SQL/KiemTraDongBoSP.ps1    để xác nhận
+```
+
+### 🔴 Lỗi thứ hai phát hiện khi test lại câu 8 trên CS2
+
+Đề: *"các câu hỏi thi sẽ **ưu tiên lấy ở cơ sở mà lớp đã học**… chừng nào không đủ nữa thì mới lấy thêm cơ sở còn lại."*
+
+Kiểm tra bảng `BODE` trên CS2:
+
+```
+TH123 (giáo viên CS1) : 158 câu    ← KHÔNG phải đề của CS2
+TH657 (giáo viên CS2) :  40 câu
+```
+
+`BODE` **không nằm trong cây dẫn xuất** (nhân bản toàn bộ) nên mỗi phân mảnh đều có đủ câu hỏi của cả hai cơ sở. Bước lấy đề "LOCAL" đọc thẳng `dbo.Bode` nên vơ luôn đề của cơ sở kia rồi gắn nhãn LOCAL → **ưu tiên theo cơ sở coi như không có hiệu lực**, và mượn đề gần như không bao giờ kích hoạt.
+
+**Cách sửa** (`SQL/13_Cau8_UuTienDungCoSo.sql`): xác định "đề của cơ sở này" bằng cách nối `BODE → GIAOVIEN → KHOA`. Bảng `KHOA` **có** trong cây dẫn xuất (lọc theo `MACS`), nên phép nối **tự động** chỉ giữ câu hỏi do giáo viên thuộc cơ sở này soạn — không cần thêm điều kiện `MACS` nào.
+
+Kết quả đo trên CS2, môn MMTCB trình độ A:
+
+| | Trước khi sửa | Sau khi sửa |
+|---|---|---|
+| Kho "của cơ sở này" | 94 (sai — gộp cả CS1) | **16** (đúng — chỉ TH657) |
+| Kho mượn được của CS1 | 78 | 78 |
+| Đề 30 câu phát ra | 30 LOCAL, 0 MUON | **16 LOCAL + 14 MUON** ✅ |
+
+Đây đúng là hành vi đề mô tả: dùng hết kho của cơ sở mình rồi mới mượn cơ sở bạn.
+
 ### Sáu tiện ích CỐ Ý chỉ giữ ở máy chủ
 
 | Thủ tục | Lý do |
