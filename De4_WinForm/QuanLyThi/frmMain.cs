@@ -33,7 +33,10 @@ public partial class frmMain : Form
         mnuBoDe.Visible = laGV || laTruong;
         if (laTruong) mnuDanhMuc.Text = "📋  Danh mục (chỉ xem)";
 
-        mnuThi.Visible = laSV || laGV || laCoSo;
+        mnuThi.Visible = laSV || laGV || laCoSo || laTruong;
+        // Phân công là việc của Cơ sở. Giảng viên mở để biết mình dạy gì,
+        // Trưởng mở để xem - frmPhanCong tự khoá nút cho hai nhóm đó.
+        mnuPhanCong.Visible = laCoSo || laGV || laTruong;
         mnuChuanBiThi.Visible = laGV || laCoSo;
         // Đề: "giảng viên được quyền THI THỬ nhưng không ghi điểm"
         // -> giảng viên cũng phải vào được màn hình thi.
@@ -79,6 +82,7 @@ public partial class frmMain : Form
     private void mnuSinhVien_Click(object? sender, EventArgs e) => MoCon(new frmSinhVien());
     private void mnuGiaoVien_Click(object? sender, EventArgs e) => MoCon(new frmGiaoVien());
     private void mnuBoDe_Click(object? sender, EventArgs e) => MoCon(new frmBoDe());
+    private void mnuPhanCong_Click(object? sender, EventArgs e) => MoCon(new frmPhanCong());
     private void mnuBangDiem_Click(object? sender, EventArgs e) => MoCon(new frmBangDiem());
     private void mnuChuanBiThi_Click(object? sender, EventArgs e) => MoCon(new frmChuanBiThi());
     private void mnuVaoThi_Click(object? sender, EventArgs e) => MoCon(new frmThi());

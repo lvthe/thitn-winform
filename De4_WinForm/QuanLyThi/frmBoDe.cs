@@ -45,8 +45,8 @@ public class frmBoDe : Form
         _btnSua.Click += (_, _) => Ghi(sua: true);
         _btnXoa.Click += (_, _) => Xoa();
         _btnPhucHoi.Click += (_, _) => { _dangThem = false; HienChiTiet(); Bao("Đã phục hồi.", false); };
-        _btnNapLai.Click += (_, _) => Nap();
-        _cboMon.SelectedIndexChanged += (_, _) => Nap();
+        _btnNapLai.Click += (_, _) => NapMonHoc();
+        _cboMon.SelectedIndexChanged += MonThayDoi;
         _bs.PositionChanged += (_, _) => { if (!_dangThem) HienChiTiet(); };
 
         // Nhóm Trưởng: chỉ xem đề thi, không soạn / sửa / xóa (đề).
@@ -144,23 +144,69 @@ public class frmBoDe : Form
 
     private void KhoiTao()
     {
-        try
-        {
-            var mon = DataProvider.TruyVan("SELECT MAMH, TENMH FROM dbo.MONHOC ORDER BY MAMH");
-            _cboMon.DataSource = mon;
-            _cboMon.DisplayMember = "TENMH";
-            _cboMon.ValueMember = "MAMH";
-        }
-        catch (Exception ex) { Bao("Không nạp được môn học: " + ex.Message, true); }
-
         _lblCauHoi.Text = Phien.VaiTro switch
         {
             "Giangvien" => $"Chỉ hiện câu hỏi do {Phien.Ma} soạn (ràng buộc ở tầng CSDL).",
             "Truong"    => "Nhóm Trưởng: xem toàn bộ câu hỏi của phân mảnh, không sửa.",
             _           => "Nhóm Cơ sở: xem được toàn bộ câu hỏi của phân mảnh."
         };
+        NapMonHoc();
+    }
+
+    /// <summary>
+    /// Đổ ô chọn môn học. Với GIẢNG VIÊN, sp_DS_MonHoc_SoanDe chỉ trả về môn
+    /// người đó DẠY - lấy từ GIAOVIEN_DANGKY (bảng duy nhất trong schema ghi
+    /// cặp giáo viên–môn học), cộng thêm môn giảng viên ĐÃ CÓ đề trong BODE.
+    /// Việc phân công là của nhóm CoSo, nên thủ tục KHÔNG có tham số nào để
+    /// ứng dụng nới danh sách ra - giảng viên không tự mở rộng được.
+    /// Cơ sở / Trưởng vẫn thấy đủ môn của phân mảnh.
+    /// </summary>
+    private void NapMonHoc()
+    {
+        try
+        {
+            var mon = DataProvider.GoiSP("dbo.sp_DS_MonHoc_SoanDe");
+
+            // Gán DataSource TRƯỚC rồi mới đặt Display/ValueMember, và tháo
+            // handler trong lúc gán - nếu không, SelectedIndexChanged nổ giữa
+            // chừng lúc ValueMember chưa có, gọi Nap() với mã môn rỗng.
+            _cboMon.SelectedIndexChanged -= MonThayDoi;
+            _cboMon.DataSource = mon;
+            _cboMon.DisplayMember = "TENMH";
+            _cboMon.ValueMember = "MAMH";
+            _cboMon.SelectedIndexChanged += MonThayDoi;
+
+            if (mon.Rows.Count == 0)
+            {
+                Bao(Phien.VaiTro == "Giangvien"
+                        ? $"Giảng viên {Phien.Ma} chưa được phân công dạy môn nào tại phân mảnh này. "
+                          + "Liên hệ Cơ sở để được phân công trước khi soạn đề."
+                        : "Phân mảnh này chưa có môn học nào.",
+                    true);
+                _luoi.DataSource = null;
+                XoaTrangPanel();
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Ô chọn môn học trống là triệu chứng, không phải nguyên nhân. Hay gặp
+            // nhất là mất quyền sau khi nhân bản tạo lại bảng / thủ tục
+            // -> phải nói thẳng ra, đừng chỉ ghi lặng lẽ ở thanh trạng thái.
+            Bao("Không nạp được môn học: " + ex.Message, true);
+            MessageBox.Show(
+                "Không đọc được danh mục môn học nên không soạn được đề.\r\n\r\n" +
+                ex.Message +
+                "\r\n\r\nNếu là lỗi quyền: chạy lại SQL\\12_CapLaiQuyen.sql trên phân mảnh này " +
+                "(nhân bản tạo lại bảng và thủ tục thì mọi quyền trên đó bị mất).",
+                "Câu 6 - Soạn bộ đề", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
         Nap();
     }
+
+    private void MonThayDoi(object? sender, EventArgs e) => Nap();
 
     private string MaMon() => _cboMon.SelectedValue?.ToString()?.Trim() ?? "";
 

@@ -11,7 +11,7 @@ partial class frmMain
     private ToolStripStatusLabel lblTrangThai;
 
     private ToolStripMenuItem mnuDanhMuc, mnuMonHoc, mnuKhoaLop, mnuSinhVien, mnuGiaoVien, mnuBoDe;
-    private ToolStripMenuItem mnuThi, mnuChuanBiThi, mnuVaoThi, mnuXemKetQua;
+    private ToolStripMenuItem mnuThi, mnuPhanCong, mnuChuanBiThi, mnuVaoThi, mnuXemKetQua;
     private ToolStripMenuItem mnuBaoCao, mnuBangDiem, mnuBaoCaoDangKy, mnuTraCuu;
     private ToolStripMenuItem mnuHeThong, mnuTaoLogin, mnuSaoLuu, mnuDangXuat, mnuThoat;
 
@@ -50,12 +50,15 @@ partial class frmMain
             { mnuMonHoc, mnuKhoaLop, mnuSinhVien, mnuGiaoVien, mnuBoDe });
 
         // --- Thi (câu 7,8,9) ---
+        // Phân công đứng TRƯỚC Chuẩn bị thi vì đó là thứ tự nghiệp vụ:
+        // Cơ sở phân công -> giảng viên soạn đề -> mới đăng ký được kỳ thi.
+        mnuPhanCong = Muc("🧑‍🏫  Phân công giảng dạy", mnuPhanCong_Click);
         mnuChuanBiThi = Muc("📅  Chuẩn bị thi (đăng ký)", mnuChuanBiThi_Click);
         mnuVaoThi = Muc("✍️  Vào thi", mnuVaoThi_Click);
         mnuXemKetQua = Muc("🔍  Xem lại bài thi", mnuXemKetQua_Click);
         mnuThi = Muc("📝  Thi");
         mnuThi.DropDownItems.AddRange(new ToolStripItem[]
-            { mnuChuanBiThi, mnuVaoThi, mnuXemKetQua });
+            { mnuPhanCong, mnuChuanBiThi, mnuVaoThi, mnuXemKetQua });
 
         // --- Báo cáo (câu 10, 11) + tra cứu phân mảnh ---
         mnuBangDiem = Muc("🏆  Bảng điểm môn học", mnuBangDiem_Click);

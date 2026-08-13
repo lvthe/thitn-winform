@@ -36,68 +36,111 @@ partial class frmDangNhap
         btnThoat = new Button();
         lblThongBao = new Label();
         SuspendLayout();
-
+        // 
         // lblTieuDe
-        lblTieuDe.Text = "ĐĂNG NHẬP HỆ THỐNG THI TRẮC NGHIỆM";
+        // 
         lblTieuDe.Font = new Font("Segoe UI", 13F, FontStyle.Bold);
-        lblTieuDe.TextAlign = ContentAlignment.MiddleCenter;
         lblTieuDe.Location = new Point(0, 0);
-        lblTieuDe.Size = new Size(462, 56);
-
+        lblTieuDe.Margin = new Padding(4, 0, 4, 0);
+        lblTieuDe.Name = "lblTieuDe";
+        lblTieuDe.Size = new Size(660, 93);
+        lblTieuDe.TabIndex = 0;
+        lblTieuDe.Text = "ĐĂNG NHẬP HỆ THỐNG THI TRẮC NGHIỆM";
+        lblTieuDe.TextAlign = ContentAlignment.MiddleCenter;
+        // 
         // lblPhanManh
+        // 
+        lblPhanManh.Location = new Point(43, 137);
+        lblPhanManh.Margin = new Padding(4, 0, 4, 0);
+        lblPhanManh.Name = "lblPhanManh";
+        lblPhanManh.Size = new Size(194, 38);
+        lblPhanManh.TabIndex = 1;
         lblPhanManh.Text = "Phân mảnh (cơ sở):";
-        lblPhanManh.Location = new Point(30, 82);
-        lblPhanManh.Size = new Size(136, 23);
         lblPhanManh.TextAlign = ContentAlignment.MiddleLeft;
-
+        // 
         // cboPhanManh
+        // 
         cboPhanManh.DropDownStyle = ComboBoxStyle.DropDownList;
-        cboPhanManh.Location = new Point(170, 80);
-        cboPhanManh.Size = new Size(260, 25);
-
+        cboPhanManh.Location = new Point(243, 133);
+        cboPhanManh.Margin = new Padding(4, 5, 4, 5);
+        cboPhanManh.Name = "cboPhanManh";
+        cboPhanManh.Size = new Size(370, 33);
+        cboPhanManh.TabIndex = 2;
+        // 
         // lblMa
+        // 
+        lblMa.Location = new Point(43, 203);
+        lblMa.Margin = new Padding(4, 0, 4, 0);
+        lblMa.Name = "lblMa";
+        lblMa.Size = new Size(194, 38);
+        lblMa.TabIndex = 3;
         lblMa.Text = "Mã / Tài khoản:";
-        lblMa.Location = new Point(30, 122);
-        lblMa.Size = new Size(136, 23);
         lblMa.TextAlign = ContentAlignment.MiddleLeft;
-
+        // 
         // txtMa
-        txtMa.Location = new Point(170, 120);
-        txtMa.Size = new Size(260, 25);
+        // 
         txtMa.CharacterCasing = CharacterCasing.Upper;
-
+        txtMa.Location = new Point(243, 200);
+        txtMa.Margin = new Padding(4, 5, 4, 5);
+        txtMa.Name = "txtMa";
+        txtMa.Size = new Size(370, 31);
+        txtMa.TabIndex = 4;
+        // 
         // lblMatKhau
+        // 
+        lblMatKhau.Location = new Point(43, 270);
+        lblMatKhau.Margin = new Padding(4, 0, 4, 0);
+        lblMatKhau.Name = "lblMatKhau";
+        lblMatKhau.Size = new Size(194, 38);
+        lblMatKhau.TabIndex = 5;
         lblMatKhau.Text = "Mật khẩu:";
-        lblMatKhau.Location = new Point(30, 162);
-        lblMatKhau.Size = new Size(136, 23);
         lblMatKhau.TextAlign = ContentAlignment.MiddleLeft;
-
+        // 
         // txtMatKhau
-        txtMatKhau.Location = new Point(170, 160);
-        txtMatKhau.Size = new Size(260, 25);
+        // 
+        txtMatKhau.Location = new Point(243, 267);
+        txtMatKhau.Margin = new Padding(4, 5, 4, 5);
+        txtMatKhau.Name = "txtMatKhau";
+        txtMatKhau.Size = new Size(370, 31);
+        txtMatKhau.TabIndex = 6;
         txtMatKhau.UseSystemPasswordChar = true;
-
-        // lblThongBao
-        lblThongBao.ForeColor = Color.Firebrick;
-        lblThongBao.Location = new Point(30, 194);
-        lblThongBao.Size = new Size(400, 40);
-
+        // 
         // btnDangNhap
+        // 
+        btnDangNhap.Location = new Point(243, 400);
+        btnDangNhap.Margin = new Padding(4, 5, 4, 5);
+        btnDangNhap.Name = "btnDangNhap";
+        btnDangNhap.Size = new Size(179, 57);
+        btnDangNhap.TabIndex = 8;
         btnDangNhap.Text = "Đăng nhập";
-        btnDangNhap.Location = new Point(170, 240);
-        btnDangNhap.Size = new Size(125, 34);
         btnDangNhap.Click += btnDangNhap_Click;
-
+        // 
         // btnThoat
+        // 
+        btnThoat.Location = new Point(436, 400);
+        btnThoat.Margin = new Padding(4, 5, 4, 5);
+        btnThoat.Name = "btnThoat";
+        btnThoat.Size = new Size(179, 57);
+        btnThoat.TabIndex = 9;
         btnThoat.Text = "Thoát";
-        btnThoat.Location = new Point(305, 240);
-        btnThoat.Size = new Size(125, 34);
         btnThoat.Click += btnThoat_Click;
-
+        // 
+        // lblThongBao
+        // 
+        lblThongBao.ForeColor = Color.Firebrick;
+        lblThongBao.Location = new Point(43, 323);
+        lblThongBao.Margin = new Padding(4, 0, 4, 0);
+        lblThongBao.Name = "lblThongBao";
+        lblThongBao.Size = new Size(571, 67);
+        lblThongBao.TabIndex = 7;
+        // 
         // frmDangNhap
-        AutoScaleDimensions = new SizeF(7F, 15F);
+        // 
+        AcceptButton = btnDangNhap;
+        AutoScaleDimensions = new SizeF(10F, 25F);
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(462, 300);
+        CancelButton = btnThoat;
+        ClientSize = new Size(660, 500);
         Controls.Add(lblTieuDe);
         Controls.Add(lblPhanManh);
         Controls.Add(cboPhanManh);
@@ -108,14 +151,15 @@ partial class frmDangNhap
         Controls.Add(lblThongBao);
         Controls.Add(btnDangNhap);
         Controls.Add(btnThoat);
-        AcceptButton = btnDangNhap;
-        CancelButton = btnThoat;
         FormBorderStyle = FormBorderStyle.FixedDialog;
+        Margin = new Padding(4, 5, 4, 5);
         MaximizeBox = false;
         MinimizeBox = false;
+        Name = "frmDangNhap";
         StartPosition = FormStartPosition.CenterScreen;
         Text = "Đăng nhập";
         Load += frmDangNhap_Load;
         ResumeLayout(false);
+        PerformLayout();
     }
 }
