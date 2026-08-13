@@ -229,13 +229,34 @@ Nguyên nhân: **quyền GRANT không nằm trong định nghĩa stored procedur
 
 Mất `sp_DangNhap_SV` → ứng dụng không xác thực được sinh viên. Nhưng vì luồng đăng nhập bắt `SqlException` rồi chuyển sang nhánh sinh viên, lỗi *"EXECUTE permission denied"* bị nuốt và hiện ra thành **"Sai mã số hoặc mật khẩu"** — rất khó đoán ra nếu không biết cơ chế này.
 
+**Cùng cơ chế đó còn làm mất QUYỀN BẢNG.** Lần thứ hai gặp lại: sau khi dựng lại subscription CS2, giảng viên `TH657` đăng nhập bình thường nhưng ComboBox **môn học trống trơn** nên không soạn được đề. Kiểm tra quyền bảng của từng nhóm:
+
+| Server | `Giangvien` có quyền bảng |
+|---|---|
+| SERVER1 | SELECT trên 8 bảng, DENY trên 6 — **còn nguyên** |
+| SERVER2 | **không còn gì cả** |
+
+Lý do: snapshot / reinitialize **`DROP` rồi tạo lại BẢNG**, kéo theo mất mọi `GRANT`/`DENY` trên bảng — y hệt chuyện đã xảy ra với thủ tục. Lỗi thật là `SELECT permission was denied on the object 'MONHOC'`, nhưng người dùng chỉ thấy một ô chọn rỗng.
+
+> Bài học lặp lại lần thứ hai: **nhân bản không mang theo phân quyền.** Bất kỳ thao tác nào khiến nhân bản tạo lại đối tượng — đẩy thủ tục, snapshot, reinitialize — đều xoá sạch quyền trên đối tượng đó.
+
 **Quy trình đúng, đủ ba bước:**
 
 ```
 1. Sửa thủ tục trên MÁY CHỦ
-2. Nhân bản đẩy xuống phân mảnh
+2. Nhân bản đẩy xuống phân mảnh  (hoặc snapshot / reinitialize)
 3. CHẠY LẠI  SQL/12_CapLaiQuyen.sql     ← đừng quên bước này
    rồi        SQL/KiemTraDongBoSP.ps1    để xác nhận
+```
+
+`12_CapLaiQuyen.sql` nay khôi phục **cả hai loại quyền** — phần A quyền bảng (gộp từ `02`, `03`, `10`), phần B quyền `EXECUTE` — và in ra bảng đối chiếu để nhìn phát hiện ngay:
+
+```
+nhom        sp_execute  bang_select  bang_deny
+CoSo                24            1          0
+Giangvien           20            8          6      ← bang_select = 0 là hỏng
+Sinhvien            12            0          3
+Truong              18            1         14
 ```
 
 ### 🔴 Lỗi thứ hai phát hiện khi test lại câu 8 trên CS2
