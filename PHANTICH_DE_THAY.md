@@ -264,7 +264,7 @@ Thầy nhấn mạnh mọi app quản lý CSDL đều có 3 phần:
 
 | Lỗi | Chi tiết |
 |---|---|
-| **Mượn đề chưa bao giờ chạy** | Câu hỏi cũ của 2 cơ sở dùng chung dải mã 1–259 → trùng hoàn toàn. Bảng tạm `#De` khoá `PRIMARY KEY(CAUHOI)` nên mọi câu mượn bị loại → đề luôn ra **100% LOCAL**. Sửa: `#De` khoá `(CAUHOI, NGUON)`, `ChiTiet_BaiThi` đổi PK sang `STT`. Sau sửa: **94 LOCAL + 6 MUON** |
+| **Mượn đề chưa bao giờ chạy** | Cùng một mã `CAUHOI` có mặt ở **cả hai nguồn gom đề** — đo trên `SERVER1`: cả 276 mã trong `BODE` đều có trong `Bode_Muon`. Bảng tạm `#De` khoá `PRIMARY KEY(CAUHOI)` nên câu `MUON` đụng khoá với câu `LOCAL` cùng mã → bị loại sạch → đề luôn ra **100% LOCAL**. Sửa: `#De` khoá `(CAUHOI, NGUON)`, `ChiTiet_BaiThi` đổi PK sang `STT`. Sau sửa: **94 LOCAL + 6 MUON** |
 | **Phân quyền trống rỗng** | Nhóm `Giangvien` không SELECT được `MONHOC`, không EXECUTE được `sp_Bode_DS` → câu 6 chết hoàn toàn. Đã cấp đủ 31 quyền EXECUTE (`SQL/03_PhanQuyen.sql`) |
 
 ### Bộ script SQL đã tạo

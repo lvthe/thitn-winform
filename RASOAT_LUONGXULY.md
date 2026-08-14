@@ -576,11 +576,13 @@ Script: `SQL/09_VaLoHongPhanQuyen.sql`
 
 Trả lời theo 2 ý:
 
-1. **Đây là ảnh chụp đề tại thời điểm thi.** Giảng viên có quyền sửa hoặc xóa câu hỏi sau kỳ thi. Nếu chỉ lưu khóa `CAUHOI` thì khi in lại bài cũ (câu 9 — phúc khảo) sẽ ra nội dung **đã bị thay đổi**, không còn phản ánh đúng bài sinh viên đã làm.
+1. **Đây là ảnh chụp đề tại thời điểm thi.** Giảng viên có quyền sửa (`sp_Bode_Sua`) hoặc **xóa** (`sp_Bode_Xoa`) câu hỏi sau kỳ thi. Nếu chỉ lưu khóa `CAUHOI` thì khi in lại bài cũ (câu 9 — phúc khảo) sẽ ra nội dung **đã bị thay đổi**; còn nếu câu đó đã bị xóa thì bài thi thành **không đọc được**. Điểm số vẫn còn nhưng không giải thích được cho sinh viên — hỏng đúng mục đích của câu 9.
 
-2. **Câu mượn của cơ sở khác không join ngược được.** Với dòng có `NGUON = 'MUON'`, câu hỏi gốc nằm ở `BODE` của **cơ sở kia**, không tồn tại trong phân mảnh này. Không lưu nội dung thì mất hẳn dữ liệu.
+2. **Cả hai nguồn đề đều là dữ liệu sống, không phải nơi neo lâu dài.** Ngoài `BODE` bị sửa/xóa như trên, `Bode_Muon` còn bị **dựng lại toàn bộ** mỗi 5 phút bằng `MERGE … WHEN NOT MATCHED BY SOURCE THEN DELETE` (xem PHẦN F mục F4). Một câu bị rút khỏi `BODE` sẽ biến mất khỏi `Bode_Muon` ở lần làm mới kế tiếp.
 
-Khóa chính `(MAPHIEU, STT)` — `STT` định danh vị trí câu trong phiếu, `CAUHOI` chỉ là thuộc tính tham chiếu. Chính cách đặt khóa này cho phép một phiếu chứa đồng thời **câu số 5 của cơ sở mình** và **câu số 5 mượn được** (dữ liệu cũ của hai cơ sở dùng chung dải mã 1..259 nên trùng nhau hoàn toàn).
+> **Đính chính** — bản trước của tài liệu này ghi lý do 2 là *"câu mượn nằm ở `BODE` của cơ sở kia, không tồn tại trong phân mảnh này"*. **Sai.** `BODE` là article **không lọc**, nhân bản toàn bộ, nên mọi phân mảnh đều có đủ 276 câu của cả hai cơ sở. Thứ phân mảnh **không** suy ra được là câu đó **thuộc cơ sở nào** — vì chuỗi `BODE → GIAOVIEN → KHOA` đứt ở `KHOA` (bảng này nằm trong cây dẫn xuất, đã bị lọc theo `MACS`). Đo trên `SERVER1`: 276 câu trong `BODE` nhưng chỉ **231** câu nối được tới `KHOA`, **45** câu còn lại là của `TH657` có `MAKH='VT'` — khoa không tồn tại ở CS1. Đó mới là lý do `Bode_Muon` phải tồn tại: nó là `BODE` **cộng thêm cột `MACS` phi chuẩn hoá**, tính sẵn ở máy chủ nơi `KHOA` có đủ hai cơ sở.
+
+Khóa chính `(MAPHIEU, STT)` — `STT` định danh vị trí câu trong phiếu, `CAUHOI` chỉ là thuộc tính tham chiếu. Cách đặt khóa này cần thiết vì **cùng một mã `CAUHOI` tồn tại ở CẢ HAI nguồn gom đề**: đã kiểm trên `SERVER1`, cả 276 mã trong `BODE` đều có mặt trong `Bode_Muon`. Bảng tạm `#De` vì vậy cũng phải khóa `(CAUHOI, NGUON)` chứ không phải `(CAUHOI)` — bản đầu khóa mỗi `CAUHOI` nên mọi câu `MUON` bị loại sạch và **mượn đề chưa bao giờ chạy**.
 
 ---
 
