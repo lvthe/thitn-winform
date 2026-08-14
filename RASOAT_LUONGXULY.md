@@ -740,6 +740,10 @@ MSmerge_conflict_TN_CSDLPT_CS2_Bode_Muon : 40 dòng
 "The merge process is retrying a failed operation made to article 'Bode_Muon'"
 ```
 
+> Số rác này **đã dọn** (92 dòng ở máy chủ + 40 dòng `MSmerge_conflicts_info` ở CS2), nên nếu bây giờ bạn mở các bảng `MSmerge_conflict%` sẽ thấy rỗng — đó là trạng thái đúng, không phải chưa từng xảy ra. Cùng đợt còn dọn **12 dòng xung đột `MONHOC` cũ** có từ trước phiên này (trong đó có mã `LTRR` — môn đã bị xoá khỏi `MONHOC`); chúng không còn dòng tương ứng trong `MSmerge_conflicts_info` vì đã quá hạn lưu.
+>
+> Bảng xung đột chỉ là **nhật ký của những dòng bị từ chối**, xoá không đụng tới dữ liệu thật. Kiểm chứng sau khi dọn: `MONHOC` = 7, `Bode` = 276, `SINHVIEN` = 19 trên máy chủ (11 + 8 ở hai phân mảnh), merge agent vẫn báo *"No data needed to be merged"* bình thường.
+
 Mà lợi ích thì **bằng không**: mỗi phân mảnh chỉ đọc `Bode_Muon` với điều kiện `MACS <> cơ sở của mình`, nên dòng `CS2` nằm trong `Bode_Muon` của `CS2` **không ai đọc tới**. Muốn `CS1` mượn được đề `CS2` thì dòng đó bắt buộc phải đi qua máy chủ — đúng đường mà job 5 phút vẫn đang làm.
 
 → Đã **khôi phục** ba thủ tục về hành vi gốc: chỉ đụng `dbo.Bode`, `Bode_Muon` để máy chủ lo.
